@@ -29,7 +29,6 @@
 #include <MicroOcpp/Core/FilesystemUtils.h>
 #include <MicroOcpp/Core/Ftp.h>
 #include <MicroOcpp/Core/FtpMbedTLS.h>
-
 #include <MicroOcpp/Operations/Authorize.h>
 #include <MicroOcpp/Operations/StartTransaction.h>
 #include <MicroOcpp/Operations/StopTransaction.h>
