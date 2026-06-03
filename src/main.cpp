@@ -87,7 +87,7 @@ void setup() {
 
 void loop() {
 
-
+    getOperationType();
     /*
      * Do all OCPP stuff (process WebSocket input, send recorded meter values to Central System, etc.)
      */
