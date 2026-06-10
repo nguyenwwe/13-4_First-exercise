@@ -23,7 +23,7 @@ ESP8266WiFiMulti WiFiMulti;
 
 static bool started = false;
 
-//
+const int buttonPin = 5;
 //  Settings which worked for my SteVe instance:
 //
 //#define OCPP_BACKEND_URL   "ws://192.168.178.100:8180/steve/websocket/CentralSystemService"
@@ -31,13 +31,14 @@ static bool started = false;
 
 void setup() {
 
-    
+    pinMode(4, OUTPUT);
     /*
     
      * Initialize Serial and WiFi
      */ 
 
     Serial.begin(115200);
+    pinMode(buttonPin, INPUT_PULLUP);
 
     Serial.print(F("[main] Wait for WiFi: "));
 
@@ -87,24 +88,30 @@ void setup() {
 
 void loop() {
 
-  
+
+    /*
      * Do all OCPP stuff (process WebSocket input, send recorded meter values to Central System, etc.)
      */
     mocpp_loop();
+
     /*
      * Energize EV plug if OCPP transaction is up and running
      */
     if (ocppPermitsCharge()) {
+        //Serial.printf("Bật sạc");
+        digitalWrite(4, HIGH); // bật sạc
         //OCPP set up and transaction running. Energize the EV plug here
     } else {
+        digitalWrite(4, LOW);  // tắt sạc
+        //Serial.printf("Tắt sạc");
         //No transaction running at the moment. De-energize EV plug
     }
-    
+
     /*
      * Use NFC reader to start and stop transactions
      */
-    if (/* RFID chip detected? */ !started) {
-        started = true;
+    if (/* RFID chip detected? */ digitalRead(buttonPin) == LOW) {
+        delay(200);
         String idTag = "0123456789ABCD"; //e.g. idTag = RFID.readIdTag();
 
         if (getTransaction()) {
@@ -116,11 +123,11 @@ void loop() {
              * and listen to the ConnectorPlugged Input. When the Authorization succeeds and an EV
              * is plugged, the OCPP lib will send the StartTransaction
              */
-//            auto ret = beginTransaction(idTag.c_str());
-              auto ret = true;
+            auto ret = beginTransaction(idTag.c_str());
+//            bool ret = true;
             if (ret) {
                 Serial.println(F("[main] Transaction initiated. OCPP lib will send a StartTransaction when" \
-                                 "ConnectorPlugged Input becomes true and if the Authorization succeeds"));
+                                "ConnectorPlugged Input becomes true and if the Authorization succeeds"));
             } else {
                 Serial.println(F("[main] No transaction initiated"));
             }

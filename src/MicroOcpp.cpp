@@ -25,21 +25,11 @@
 #include <MicroOcpp/Model/RemoteControl/RemoteControlService.h>
 #include <MicroOcpp/Core/Request.h>
 #include <MicroOcpp/Core/OperationRegistry.h>
-<<<<<<< HEAD
-=======
-#include <MicroOcpp/Core/ConfigurationOptions.h>
->>>>>>> da6618ecaddf3f9cf73ee73a80ddd1c3f33cad54
 #include <MicroOcpp/Core/FilesystemAdapter.h>
 #include <MicroOcpp/Core/FilesystemUtils.h>
 #include <MicroOcpp/Core/Ftp.h>
 #include <MicroOcpp/Core/FtpMbedTLS.h>
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
 
->>>>>>> da6618ecaddf3f9cf73ee73a80ddd1c3f33cad54
->>>>>>> 23a188525875609ee602c59f5f6c12f375d87377
 #include <MicroOcpp/Operations/Authorize.h>
 #include <MicroOcpp/Operations/StartTransaction.h>
 #include <MicroOcpp/Operations/StopTransaction.h>
@@ -90,11 +80,7 @@ void mocpp_initialize(const char *backendUrl, const char *chargeBoxId, const cha
         return;
     }
 
-<<<<<<< HEAD
     if (!chargeBoxId) {
-=======
-    if (!chargeBoxId) { 
->>>>>>> da6618ecaddf3f9cf73ee73a80ddd1c3f33cad54
         chargeBoxId = "";
     }
 
@@ -152,30 +138,14 @@ void mocpp_initialize(const char *backendUrl, const char *chargeBoxId, const cha
         path = "/";
     }
 
-<<<<<<< HEAD
     if ((!*chargeBoxId) == '\0') {
-=======
-/*    if ((!*chargeBoxId) == '\0') {
->>>>>>> da6618ecaddf3f9cf73ee73a80ddd1c3f33cad54
         if (path.back() != '/') {
             path += '/';
         }
 
         path += chargeBoxId;
     }
-<<<<<<< HEAD
 
-=======
-*/
-    if (chargeBoxId && strlen(chargeBoxId) > 0) {
-
-        if (!path.empty() && path.back() != '/') {
-            path += '/';
-        }
-
-        path += chargeBoxId;
-    }
->>>>>>> da6618ecaddf3f9cf73ee73a80ddd1c3f33cad54
     MO_DBG_INFO("connecting to %s -- (host: %s, port: %u, path: %s)", url.c_str(), host.c_str(), port, path.c_str());
 
     if (!webSocket)

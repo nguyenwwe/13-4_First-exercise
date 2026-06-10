@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-
->>>>>>> da6618ecaddf3f9cf73ee73a80ddd1c3f33cad54
 // matth-x/MicroOcpp
 // Copyright Matthias Akstaller 2019 - 2024
 // MIT License
