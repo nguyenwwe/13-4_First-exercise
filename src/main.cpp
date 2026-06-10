@@ -23,7 +23,7 @@ ESP8266WiFiMulti WiFiMulti;
 
 static bool started = false;
 
-const int buttonPin = 5;
+const int buttonPin = 23;
 //  Settings which worked for my SteVe instance:
 //
 //#define OCPP_BACKEND_URL   "ws://192.168.178.100:8180/steve/websocket/CentralSystemService"
@@ -111,7 +111,7 @@ void loop() {
      * Use NFC reader to start and stop transactions
      */
     if (/* RFID chip detected? */ digitalRead(buttonPin) == LOW) {
-        delay(200);
+        delay(2000);
         String idTag = "0123456789ABCD"; //e.g. idTag = RFID.readIdTag();
 
         if (getTransaction()) {
