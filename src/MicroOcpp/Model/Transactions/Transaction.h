@@ -89,7 +89,7 @@ private:
      */
     char idTag [IDTAG_LEN_MAX + 1] = {'\0'};
     char parentIdTag [IDTAG_LEN_MAX + 1] = {'\0'};
-    bool authorized = true;    //if the given idTag was authorized
+    bool authorized = false;    //if the given idTag was authorized
     bool deauthorized = false;  //if the server revoked a local authorization
     Timestamp begin_timestamp = MIN_TIME;
     int reservationId = -1;

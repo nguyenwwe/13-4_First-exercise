@@ -21,9 +21,8 @@ ESP8266WiFiMulti WiFiMulti;
 #define OCPP_BACKEND_URL   "ws://192.168.100.136:8180/steve/websocket/CentralSystemService"
 #define OCPP_CHARGE_BOX_ID "esp-charger"
 
-static bool started = false;
 
-const int buttonPin = 23;
+
 //  Settings which worked for my SteVe instance:
 //
 //#define OCPP_BACKEND_URL   "ws://192.168.178.100:8180/steve/websocket/CentralSystemService"
@@ -32,13 +31,15 @@ const int buttonPin = 23;
 void setup() {
 
     pinMode(4, OUTPUT);
+    pinMode(23, INPUT_PULLUP);
     /*
     
      * Initialize Serial and WiFi
      */ 
 
     Serial.begin(115200);
-    pinMode(buttonPin, INPUT_PULLUP);
+    
+
 
     Serial.print(F("[main] Wait for WiFi: "));
 
@@ -83,11 +84,15 @@ void setup() {
         return true;
     });
 
+    setEvReadyInput([]() {
+        return true;
+    });
+
     //... see MicroOcpp.h for more settings
 }
 
 void loop() {
-
+    
 
     /*
      * Do all OCPP stuff (process WebSocket input, send recorded meter values to Central System, etc.)
@@ -97,24 +102,58 @@ void loop() {
     /*
      * Energize EV plug if OCPP transaction is up and running
      */
-    if (ocppPermitsCharge()) {
-        //Serial.printf("Bật sạc");
-        digitalWrite(4, HIGH); // bật sạc
-        //OCPP set up and transaction running. Energize the EV plug here
-    } else {
-        digitalWrite(4, LOW);  // tắt sạc
-        //Serial.printf("Tắt sạc");
-        //No transaction running at the moment. De-energize EV plug
+   /*
+     * Khai báo một biến tĩnh (static). Biến tĩnh sẽ không bị xóa khi hàm loop() chạy lại.
+     * Ban đầu mặc định là false (tương đương với tắt sạc)
+     */
+    static bool lastChargingState = false; 
+
+    /*
+     * Lấy trạng thái cho phép sạc hiện tại từ thư viện OCPP
+     */
+    bool currentChargingState = ocppPermitsCharge();
+
+    /*
+     * KIỂM TRA: Nếu trạng thái hiện tại KHÁC với trạng thái ở chu kỳ trước (có sự thay đổi)
+     */
+    if (currentChargingState != lastChargingState) {
+        
+        if (currentChargingState == true) {
+            // Trạng thái vừa chuyển từ TẮT sang BẬT
+            Serial.println(F("\n================================"));
+            Serial.println(F("[RELAY] >>> BẬT SẠC <<<"));
+            Serial.println(F("[RELAY] Đã đóng rơ-le, bắt đầu cấp điện cho xe!"));
+            Serial.println(F("================================\n"));
+            
+            digitalWrite(4, HIGH); // Bật rơ-le vật lý
+        } 
+        else {
+            // Trạng thái vừa chuyển từ BẬT sang TẮT
+            Serial.println(F("\n================================"));
+            Serial.println(F("[RELAY] >>> TẮT SẠC <<<"));
+            Serial.println(F("[RELAY] Ngắt rơ-le, dừng cấp điện!"));
+            Serial.println(F("================================\n"));
+            
+            digitalWrite(4, LOW);  // Tắt rơ-le vật lý
+        }
+
+        // Cập nhật lại trạng thái cũ bằng trạng thái mới để không bị in lại ở vòng lặp sau
+        lastChargingState = currentChargingState; 
     }
+
 
     /*
      * Use NFC reader to start and stop transactions
      */
-    if (/* RFID chip detected? */ digitalRead(buttonPin) == LOW) {
-        delay(2000);
-        String idTag = "0123456789ABCD"; //e.g. idTag = RFID.readIdTag();
+    if (/* RFID chip detected? */ digitalRead(23) == LOW) {
+        delay(200); // Chống nhiễu nút bấm (Debounce) ngắn lại, 2000ms là quá lâu
+        
+        // Đợi cho đến khi nhả nút bấm ra để tránh việc lặp lệnh liên tục
+        while(digitalRead(23) == LOW) { delay(10); }
 
-        if (getTransaction()) {
+        String idTag = "ABC123"; //e.g. idTag = RFID.readIdTag();
+
+        if (!getTransaction()) {
             //no transaction running or preparing. Begin a new transaction
             Serial.printf("[main] Begin Transaction with idTag %s\n", idTag.c_str());
 
@@ -124,6 +163,7 @@ void loop() {
              * is plugged, the OCPP lib will send the StartTransaction
              */
             auto ret = beginTransaction(idTag.c_str());
+
 //            bool ret = true;
             if (ret) {
                 Serial.println(F("[main] Transaction initiated. OCPP lib will send a StartTransaction when" \
