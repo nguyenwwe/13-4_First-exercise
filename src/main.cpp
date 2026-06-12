@@ -151,7 +151,7 @@ void loop() {
         // Đợi cho đến khi nhả nút bấm ra để tránh việc lặp lệnh liên tục
         while(digitalRead(23) == LOW) { delay(10); }
 
-        String idTag = "ABC123"; //e.g. idTag = RFID.readIdTag();
+        String idTag = "ESP_001"; //e.g. idTag = RFID.readIdTag();
 
         if (!getTransaction()) {
             //no transaction running or preparing. Begin a new transaction
