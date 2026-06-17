@@ -32,6 +32,7 @@ void setup() {
 
     pinMode(4, OUTPUT);
     pinMode(23, INPUT_PULLUP);
+    pinMode(22, INPUT_PULLUP);
     /*
     
      * Initialize Serial and WiFi
@@ -79,10 +80,10 @@ void setup() {
         Serial.printf("[main] Smart Charging allows maximum charge rate: %.0f\n", limit);
     });
 
-    setConnectorPluggedInput([]() {
-        //return true if an EV is plugged to this EVSE
-        return true;
-    });
+    // setConnectorPluggedInput([]() {
+    //     //return true if an EV is plugged to this EVSE
+    //     return false;
+    // });
 
     setEvReadyInput([]() {
         return true;
@@ -98,6 +99,18 @@ void loop() {
      * Do all OCPP stuff (process WebSocket input, send recorded meter values to Central System, etc.)
      */
     mocpp_loop();
+
+    // Plug an EV
+    if (digitalRead(22) == LOW){
+    setConnectorPluggedInput([]() {
+        //return true if an EV is plugged to this EVSE
+        return true;
+    });}else{
+        setConnectorPluggedInput([]() {
+        //return false if an EV is unplugged to this EVSE
+        return false;
+    });
+    }
 
     /*
      * Energize EV plug if OCPP transaction is up and running
@@ -146,7 +159,7 @@ void loop() {
      * Use NFC reader to start and stop transactions
      */
     if (/* RFID chip detected? */ digitalRead(23) == LOW) {
-        delay(200); // Chống nhiễu nút bấm (Debounce) ngắn lại, 2000ms là quá lâu
+        delay(200); // Chống nhiễu nút bấm (Debounce)
         
         // Đợi cho đến khi nhả nút bấm ra để tránh việc lặp lệnh liên tục
         while(digitalRead(23) == LOW) { delay(10); }
