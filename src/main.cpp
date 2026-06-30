@@ -1,7 +1,13 @@
 // matth-x/MicroOcpp
 // Copyright Matthias Akstaller 2019 - 2024
 // MIT License
+#include <SPI.h>
+#include <RFID/MFRC522.h>
 
+#define SS_PIN   13
+#define RST_PIN  12
+
+MFRC522 rfid(SS_PIN, RST_PIN);
 #include <Arduino.h>
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
@@ -35,6 +41,8 @@ void setup() {
     pinMode(4, OUTPUT);
     pinMode(23, INPUT_PULLUP);
     pinMode(22, INPUT_PULLUP);
+
+    
     /*
     
      * Initialize Serial and WiFi
@@ -92,7 +100,13 @@ void setup() {
     setEvReadyInput([]() {
         return true;
     });
-    
+
+
+    SPI.begin(14, 27, 26, SS_PIN);
+
+    rfid.PCD_Init();
+
+    Serial.println("RFID Ready");
     //... see MicroOcpp.h for more settings
 }
 
@@ -174,13 +188,23 @@ void loop() {
     /*
      * Use NFC reader to start and stop transactions
      */
-    if (/* RFID chip detected? */ digitalRead(23) == LOW) {
-        delay(200); // Chống nhiễu nút bấm (Debounce)
+    if ((rfid.PICC_IsNewCardPresent()) && (rfid.PICC_ReadCardSerial())){
+        String idTag = "";
+        for (byte i = 0; i < rfid.uid.size; i++) {
+        if (rfid.uid.uidByte[i] < 0x10)
+            idTag += "0";             // thêm số 0 phía trước nếu cần
+        idTag += String(rfid.uid.uidByte[i], HEX);
+        }    
+        rfid.PICC_HaltA();          //Kết thúc giao tiếp với thẻ hiện tại, tránh đọc lặp liên tục
+        rfid.PCD_StopCrypto1();     //Kết thúc phiên xác thực MIFARE và reset trạng thái RC522
         
-        // Đợi cho đến khi nhả nút bấm ra để tránh việc lặp lệnh liên tục
-        while(digitalRead(23) == LOW) { delay(10); }
+    // if (/* RFID chip detected? */ digitalRead(23) == LOW) {
+    //     delay(200); // Chống nhiễu nút bấm (Debounce)
+        
+    //     // Đợi cho đến khi nhả nút bấm ra để tránh việc lặp lệnh liên tục
+    //     while(digitalRead(23) == LOW) { delay(10); }
 
-        String idTag = "ESP_001"; //e.g. idTag = RFID.readIdTag();
+    //     String idTag = "ESP_001"; //e.g. idTag = RFID.readIdTag();
 
         if (!getTransaction()) {
             //no transaction running or preparing. Begin a new transaction
