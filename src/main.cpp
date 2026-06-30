@@ -67,7 +67,7 @@ void setup() {
     /*
      * Initialize the OCPP library
      */
-    mocpp_initialize(OCPP_BACKEND_URL, OCPP_CHARGE_BOX_ID, "My Charging Station", "My company name");
+    mocpp_initialize(OCPP_BACKEND_URL, OCPP_CHARGE_BOX_ID, "Hiptech Charging Station", "Hiptech Solution Co,Ltd");
 
     /*
      * Integrate OCPP functionality. You can leave out the following part if your EVSE doesn't need it.
