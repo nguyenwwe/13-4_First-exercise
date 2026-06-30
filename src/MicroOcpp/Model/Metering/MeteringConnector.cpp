@@ -27,7 +27,7 @@ MeteringConnector::MeteringConnector(Context& context, int connectorId, MeterSto
 
     auto meterValuesSampledDataString = declareConfiguration<const char*>("MeterValuesSampledData", "");
     declareConfiguration<int>("MeterValuesSampledDataMaxLength", 8, CONFIGURATION_VOLATILE, true);
-    meterValueSampleIntervalInt = declareConfiguration<int>("MeterValueSampleInterval", 60);
+    meterValueSampleIntervalInt = declareConfiguration<int>("MeterValueSampleInterval", 10);
     registerConfigurationValidator("MeterValueSampleInterval", VALIDATE_UNSIGNED_INT);
 
     auto stopTxnSampledDataString = declareConfiguration<const char*>("StopTxnSampledData", "");

@@ -22,7 +22,9 @@ ESP8266WiFiMulti WiFiMulti;
 #define OCPP_CHARGE_BOX_ID "esp-charger"
 
 
-
+float energyWh = 0;
+float powerW = 2200;
+unsigned long lastUpdate = 0;
 //  Settings which worked for my SteVe instance:
 //
 //#define OCPP_BACKEND_URL   "ws://192.168.178.100:8180/steve/websocket/CentralSystemService"
@@ -72,8 +74,10 @@ void setup() {
      */
     setEnergyMeterInput([]() {
         //take the energy register of the main electricity meter and return the value in watt-hours
-        return 0.f;
+        return (int)energyWh;
+;
     });
+
 
     setSmartChargingCurrentOutput([](float limit) {
         //set the SAE J1772 Control Pilot value here
@@ -88,7 +92,7 @@ void setup() {
     setEvReadyInput([]() {
         return true;
     });
-
+    
     //... see MicroOcpp.h for more settings
 }
 
@@ -112,10 +116,22 @@ void loop() {
     });
     }
 
+   
+    if (ocppPermitsCharge()) {
+        unsigned long now = millis();
+        float dt = (now - lastUpdate) / 1000.0; // seconds
+        lastUpdate = now;
+
+        energyWh += powerW * (dt / 3600.0); // Wh = W * hours
+    } else {
+        lastUpdate = millis();
+    }
+
+
     /*
      * Energize EV plug if OCPP transaction is up and running
      */
-   /*
+    /*
      * Khai báo một biến tĩnh (static). Biến tĩnh sẽ không bị xóa khi hàm loop() chạy lại.
      * Ban đầu mặc định là false (tương đương với tắt sạc)
      */
