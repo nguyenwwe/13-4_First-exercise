@@ -4,10 +4,16 @@
 #include <SPI.h>
 #include <RFID/MFRC522.h>
 
-#define SS_PIN   13
-#define RST_PIN  12
+#define SS   21
+#define RST  17
+#define PLUGGER  4
+#define SCK      19
+#define MOSI     18
+#define MISO     5
+#define LED_PIN  23
 
-MFRC522 rfid(SS_PIN, RST_PIN);
+
+MFRC522 rfid(SS, RST);
 #include <Arduino.h>
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
@@ -38,10 +44,13 @@ unsigned long lastUpdate = 0;
 
 void setup() {
 
-    pinMode(4, OUTPUT);
-    pinMode(23, INPUT_PULLUP);
-    pinMode(22, INPUT_PULLUP);
-
+    pinMode(LED_PIN, OUTPUT);
+    pinMode(PLUGGER, INPUT_PULLUP);
+    pinMode(SS, INPUT);
+    pinMode(RST, INPUT);
+    pinMode(SCK, INPUT);
+    pinMode(MOSI, INPUT);
+    pinMode(MISO, INPUT);
     
     /*
     
@@ -75,7 +84,7 @@ void setup() {
     /*
      * Initialize the OCPP library
      */
-    mocpp_initialize(OCPP_BACKEND_URL, OCPP_CHARGE_BOX_ID, "Hiptech Charging Station", "Hiptech Solution Co,Ltd");
+    mocpp_initialize(OCPP_BACKEND_URL, OCPP_CHARGE_BOX_ID, "Hiptech CS", "Hiptech Co,Ltd");
 
     /*
      * Integrate OCPP functionality. You can leave out the following part if your EVSE doesn't need it.
@@ -102,11 +111,11 @@ void setup() {
     });
 
 
-    SPI.begin(14, 27, 26, SS_PIN);
+    SPI.begin(SCK, MISO, MOSI, SS);
 
     rfid.PCD_Init();
 
-    Serial.println("RFID Ready");
+    Serial.println("[Main] RFID Ready");
     //... see MicroOcpp.h for more settings
 }
 
@@ -119,7 +128,7 @@ void loop() {
     mocpp_loop();
 
     // Plug an EV
-    if (digitalRead(22) == LOW){
+    if (digitalRead(PLUGGER) == LOW){
     setConnectorPluggedInput([]() {
         //return true if an EV is plugged to this EVSE
         return true;
@@ -163,21 +172,19 @@ void loop() {
         
         if (currentChargingState == true) {
             // Trạng thái vừa chuyển từ TẮT sang BẬT
-            Serial.println(F("\n================================"));
-            Serial.println(F("[RELAY] >>> BẬT SẠC <<<"));
-            Serial.println(F("[RELAY] Đã đóng rơ-le, bắt đầu cấp điện cho xe!"));
-            Serial.println(F("================================\n"));
+            Serial.println(F("\n               --------------"));
+            Serial.println(F("               |[RELAY]: ON |"));
+            Serial.println(F("               --------------\n"));
             
-            digitalWrite(4, HIGH); // Bật rơ-le vật lý
+            digitalWrite(LED_PIN, HIGH); // Bật rơ-le vật lý
         } 
         else {
             // Trạng thái vừa chuyển từ BẬT sang TẮT
-            Serial.println(F("\n================================"));
-            Serial.println(F("[RELAY] >>> TẮT SẠC <<<"));
-            Serial.println(F("[RELAY] Ngắt rơ-le, dừng cấp điện!"));
-            Serial.println(F("================================\n"));
+            Serial.println(F("\n               --------------"));
+            Serial.println(F("               |[RELAY]: OFF |"));
+            Serial.println(F("               ---------------\n"));
             
-            digitalWrite(4, LOW);  // Tắt rơ-le vật lý
+            digitalWrite(LED_PIN, LOW);  // Tắt rơ-le vật lý
         }
 
         // Cập nhật lại trạng thái cũ bằng trạng thái mới để không bị in lại ở vòng lặp sau
@@ -229,11 +236,12 @@ void loop() {
             //Transaction already initiated. Check if to stop current Tx by RFID card
             if (idTag.equals(getTransactionIdTag())) {
                 //card matches -> user can stop Tx
-                Serial.println(F("[main] End transaction by RFID card"));
+                Serial.printf("[main] End transaction by RFID card IDTag:%s)\n", idTag.c_str());
 
                 endTransaction(idTag.c_str());
             } else {
-                Serial.println(F("[main] Cannot end transaction by RFID card (different card?)"));
+                Serial.printf("[main] Cannot end transaction by RFID card (different card?) (IDTag:%s)\n", idTag.c_str());
+              //  Serial.println("[main] Cannot end transaction by RFID card (different card?)(IDTag:%s)",idTag.c_str());
             }
         }
     }
